@@ -3,7 +3,7 @@ docker_repository: dynverse/ti_comp1
 singularity_collection: 1540
 container_url: https://github.com/dynverse/ti_comp1
 name: Component 1
-source: tool
+source: offtheshelf
 trajectory_types: linear
 topology_inference: fixed
 platform: R
@@ -26,14 +26,14 @@ parameters:
     description: Which dimensionality reduction method to use.
   ndim:
     type: integer
-    default: 2.0
-    lower: 2.0
-    upper: 30.0
+    default: 2
+    lower: 2
+    upper: 30
   component:
     type: integer
-    default: 1.0
-    lower: 1.0
-    upper: 10.0
+    default: 1
+    lower: 1
+    upper: 10
 input:
   format: rds
   required: expression
