@@ -1,43 +1,51 @@
-library(jsonlite)
-library(readr)
-library(dplyr)
-library(purrr)
+#!/usr/local/bin/Rscript
 
-library(dyndimred)
-#   ____________________________________________________________________________
-#   Load data                                                               ####
+task <- dyncli::main()
 
-data <- read_rds("/ti/input/data.rds")
-params <- jsonlite::read_json("/ti/input/params.json")
+library(dyncli, warn.conflicts = FALSE)
+library(dplyr, warn.conflicts = FALSE)
+library(purrr, warn.conflicts = FALSE)
+library(dyndimred, warn.conflicts = FALSE)
+library(dynwrap, warn.conflicts = FALSE)
 
-#' @examples
-#' data <- dyntoy::generate_dataset(id = "test", num_cells = 300, num_features = 300, model = "binary_tree") %>% c(., .$prior_information)
-#' params <- yaml::read_yaml("containers/comp1/definition.yml")$parameters %>%
-#'   {.[names(.) != "forbidden"]} %>%
-#'   map(~ .$default)
+#####################################
+###           LOAD DATA           ###
+#####################################
 
-#   ____________________________________________________________________________
-#   Infer trajectory                                                        ####
-
-expression <- data$expression
+params <- task$params
+expression <- task$expression
 
 # TIMING: done with preproc
-checkpoints <- list(method_afterpreproc = as.numeric(Sys.time()))
+timings <- list(method_afterpreproc = Sys.time())
 
-space <- dyndimred::dimred(expression, method = params$dimred, ndim = params$ndim)
+#####################################
+###        INFER TRAJECTORY       ###
+#####################################
+
+# perform PCA dimred
+dimred <- dyndimred::dimred(as.matrix(expression), method = params$dimred, ndim = params$ndim)
+
+# transform to pseudotime using atan2
+pseudotime <- dimred[,params$component] %>% set_names(rownames(expression))
 
 # TIMING: done with method
-checkpoints$method_aftermethod <- as.numeric(Sys.time())
+timings$method_aftermethod <- Sys.time()
 
-# return output
-output <- lst(
-  cell_ids = rownames(expression),
-  pseudotime = space[,params$component] %>% set_names(rownames(expression)),
-  dimred = space,
-  timings = checkpoints
-)
+#####################################
+###     SAVE OUTPUT TRAJECTORY    ###
+#####################################
+output <-
+  wrap_data(
+    cell_ids = rownames(expression)
+  ) %>%
+  add_linear_trajectory(
+    pseudotime = pseudotime
+  ) %>%
+  add_dimred(
+    dimred = dimred
+  ) %>%
+  add_timings(
+    timings = timings
+  )
 
-#   ____________________________________________________________________________
-#   Save output                                                             ####
-
-write_rds(output, "/ti/output/output.rds")
+dyncli::write_output(output, task$output)
