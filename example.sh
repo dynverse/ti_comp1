@@ -6,12 +6,12 @@ data <- dyntoy::generate_dataset(
   id = "specific_example/comp1",
   num_cells = 99,
   num_features = 200,
-  model = "linear"
+  model = "linear",
+  normalise = FALSE
 )
 
 # add method specific args (if needed)
 data$params <- list()
-
 data$seed <- 1
 
 # write example dataset to file
