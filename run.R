@@ -23,7 +23,7 @@ timings <- list(method_afterpreproc = Sys.time())
 #####################################
 
 # perform PCA dimred
-dimred <- dyndimred::dimred(as.matrix(expression), method = parameters$dimred, ndim = parameters$ndim)
+dimred <- dyndimred::dimred(expression, method = parameters$dimred, ndim = parameters$ndim)
 
 # transform to pseudotime using atan2
 pseudotime <- dimred[,parameters$component] %>% set_names(rownames(expression))
